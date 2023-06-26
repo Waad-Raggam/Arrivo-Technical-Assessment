@@ -1,9 +1,13 @@
 // UI
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:management_portal/blocs/blocs.dart';
 import 'package:management_portal/blocs/posts/posts_event.dart';
 import 'package:management_portal/blocs/posts/posts_states.dart';
+import 'package:management_portal/models/comment.dart';
+import 'package:management_portal/screens/comments_list.dart';
 
 class PostTable extends StatelessWidget {
   @override
@@ -57,6 +61,7 @@ class PostTable extends StatelessWidget {
 class _PostsDataSource extends DataTableSource {
   final List<dynamic> _posts;
   final BuildContext _context;
+  List<Comment> comments = [];
 
   _PostsDataSource(this._posts, this._context);
 
@@ -68,35 +73,51 @@ class _PostsDataSource extends DataTableSource {
       DataCell(Text(post['title'])),
       DataCell(Text(post['body'])),
       DataCell(
-        IconButton(
-          icon: Icon(Icons.delete),
-          onPressed: () {
-            showDialog(
-              context: _context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text('Confirm Delete'),
-                  content: Text('Are you sure you want to delete this post?'),
-                  actions: <Widget>[
-                    TextButton(
-                      child: Text('Cancel'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    TextButton(
-                      child: Text('Delete'),
-                      onPressed: () {
-                        final int postId = post['id'];
-                        BlocProvider.of<PostBloc>(_context).deletePost(postId);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
+        Row(
+          children: [
+            TextButton(
+                child: Text('Comments'),
+                onPressed: () {
+                  Navigator.push(
+                    _context,
+                    MaterialPageRoute(
+                        builder: (_context) =>
+                            CommentsScreen(postId: post['id'])),
+                  );
+                }),
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () {
+                showDialog(
+                  context: _context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Confirm Delete'),
+                      content:
+                          Text('Are you sure you want to delete this post?'),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text('Cancel'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: Text('Delete'),
+                          onPressed: () {
+                            final int postId = post['id'];
+                            BlocProvider.of<PostBloc>(_context)
+                                .deletePost(postId);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
-            );
-          },
+            ),
+          ],
         ),
       ),
     ]);
