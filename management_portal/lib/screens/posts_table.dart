@@ -1,13 +1,13 @@
 // UI
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:management_portal/blocs/blocs.dart';
 import 'package:management_portal/blocs/posts/posts_event.dart';
 import 'package:management_portal/blocs/posts/posts_states.dart';
 import 'package:management_portal/models/comment.dart';
+import 'package:management_portal/models/post.dart';
 import 'package:management_portal/screens/comments_list.dart';
+import 'package:management_portal/screens/new_post.dart';
 import 'package:management_portal/screens/single_post.dart';
 
 class PostTable extends StatefulWidget {
@@ -17,6 +17,7 @@ class PostTable extends StatefulWidget {
 
 class _PostTableState extends State<PostTable> {
   dynamic _searchQuery;
+  List<dynamic> _posts = [];
 
   @override
   void initState() {
@@ -29,6 +30,26 @@ class _PostTableState extends State<PostTable> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Posts'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => NewPostForm(),
+                ),
+              ).then((newPost) {
+                if (newPost != null) {
+                  setState(() {
+                    final post = Post.fromJson(newPost);
+                    _posts.add(post);
+                  });
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -43,7 +64,8 @@ class _PostTableState extends State<PostTable> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => SinglePost(postId: postId)),
+                  builder: (context) => SinglePost(postId: postId),
+                ),
               );
             },
             decoration: const InputDecoration(
@@ -59,7 +81,7 @@ class _PostTableState extends State<PostTable> {
                   child: CircularProgressIndicator(),
                 );
               } else if (state is PostLoaded) {
-                final List<dynamic> posts = state.posts;
+                _posts = state.posts;
                 return PaginatedDataTable(
                   columns: const [
                     DataColumn(label: Text('ID')),
@@ -67,7 +89,7 @@ class _PostTableState extends State<PostTable> {
                     DataColumn(label: Text('Body')),
                     DataColumn(label: Text('Actions')),
                   ],
-                  source: _PostsDataSource(posts, context),
+                  source: _PostsDataSource(_posts, context),
                 );
               } else if (state is PostError) {
                 return Center(
@@ -93,24 +115,29 @@ class _PostsDataSource extends DataTableSource {
 
   @override
   DataRow getRow(int index) {
-    final post = _posts[index];
+    final dynamic post = _posts[index];
+    final postId = post is Post ? post.id : post['id'];
+    final postTitle = post is Post ? post.title : post['title'];
+    final postBody = post is Post ? post.body : post['body'];
+
     return DataRow(cells: [
-      DataCell(Text(post['id'].toString())),
-      DataCell(Text(post['title'])),
-      DataCell(Text(post['body'])),
+      DataCell(Text(postId.toString())),
+      DataCell(Text(postTitle)),
+      DataCell(Text(postBody)),
       DataCell(
         Row(
           children: [
             TextButton(
-                child: const Text('Comments'),
-                onPressed: () {
-                  Navigator.push(
-                    _context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            CommentsScreen(postId: post['id'])),
-                  );
-                }),
+              child: const Text('Comments'),
+              onPressed: () {
+                Navigator.push(
+                  _context,
+                  MaterialPageRoute(
+                    builder: (context) => CommentsScreen(postId: postId),
+                  ),
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
@@ -131,7 +158,8 @@ class _PostsDataSource extends DataTableSource {
                         TextButton(
                           child: const Text('Delete'),
                           onPressed: () {
-                            final int postId = post['id'];
+                            final int postId =
+                                post is Post ? post.id : post['id'];
                             BlocProvider.of<PostBloc>(_context)
                                 .deletePost(postId);
                             Navigator.of(context).pop();

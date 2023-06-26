@@ -1,16 +1,9 @@
 // UI
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:management_portal/blocs/blocs.dart';
 import 'package:management_portal/blocs/comments/comments_bloc.dart';
 import 'package:management_portal/blocs/comments/comments_events.dart';
 import 'package:management_portal/blocs/comments/comments_states.dart';
-import 'package:management_portal/blocs/posts/posts_event.dart';
-import 'package:management_portal/blocs/posts/posts_states.dart';
-import 'package:management_portal/models/comment.dart';
-import 'package:management_portal/models/post.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class CommentsScreen extends StatelessWidget {
   final int postId;
@@ -21,7 +14,7 @@ class CommentsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Comments ' + postId.toString()),
+        title: Text('Comments to Post ID: $postId'),
       ),
       body: BlocProvider(
         create: (_) => CommentsBloc(),
@@ -31,7 +24,7 @@ class CommentsScreen extends StatelessWidget {
               BlocProvider.of<CommentsBloc>(context).add(FetchComments(postId));
             }
             if (state is CommentsLoading) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             } else if (state is CommentsLoaded) {
               return ListView.builder(
                 itemCount: state.comments.length,

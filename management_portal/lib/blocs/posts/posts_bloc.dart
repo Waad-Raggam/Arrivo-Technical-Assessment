@@ -31,6 +31,23 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       } catch (e) {
         yield PostError('Failed to fetch posts');
       }
+    } else if (event is AddPost) {
+      yield PostLoading();
+      try {
+        final response = await http.post(
+            Uri.parse('https://jsonplaceholder.typicode.com/posts'),
+            body: json.encode(event.post),
+            headers: {'Content-Type': 'application/json'});
+        if (response.statusCode == 201) {
+          final dynamic newPost = json.decode(response.body);
+          _posts.add(newPost);
+          yield PostLoaded(_posts);
+        } else {
+          yield PostError('Failed to add post');
+        }
+      } catch (e) {
+        yield PostError('Failed to add post');
+      }
     } else if (event is GetPostsById) {
       yield PostLoading();
 
@@ -58,6 +75,10 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   void fetchNextPage() {
     _currentPage++;
     add(FetchPosts());
+  }
+
+  void addPost(Map<String, dynamic> post) {
+    add(AddPost(post));
   }
 
   void deletePost(int postId) {

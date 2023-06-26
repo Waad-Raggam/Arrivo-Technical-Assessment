@@ -9,6 +9,12 @@ class GetPostsById extends PostEvent {
   GetPostsById(this.postId);
 }
 
+class AddPost extends PostEvent {
+  final Map<String, dynamic> post;
+
+  AddPost(this.post);
+}
+
 class DeletePost extends PostEvent {
   final int postId;
 
