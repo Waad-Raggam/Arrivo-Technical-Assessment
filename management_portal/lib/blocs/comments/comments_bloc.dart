@@ -16,7 +16,6 @@ class CommentsBloc extends Bloc<CommentsEvent, CommentsState> {
       try {
         final response = await http.get(Uri.parse(
             'https://jsonplaceholder.typicode.com/posts/${event.postId}/comments'));
-        print("the resp" + response.request.toString());
         if (response.statusCode == 200) {
           final List<dynamic> responseData = jsonDecode(response.body);
           final comments =

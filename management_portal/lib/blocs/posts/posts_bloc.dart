@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:management_portal/models/post.dart';
+
 // Define the BLoC
 class PostBloc extends Bloc<PostEvent, PostState> {
   static const int _perPage = 10;
@@ -28,6 +30,24 @@ class PostBloc extends Bloc<PostEvent, PostState> {
         }
       } catch (e) {
         yield PostError('Failed to fetch posts');
+      }
+    } else if (event is GetPostsById) {
+      yield PostLoading();
+
+      try {
+        final response = await http.get(Uri.parse(
+            'https://jsonplaceholder.typicode.com/posts?id=${event.postId}'));
+
+        if (response.statusCode == 200) {
+          final List<dynamic> responseData = jsonDecode(response.body);
+          final List<Post> posts =
+              responseData.map((json) => Post.fromJson(json)).toList();
+          yield PostLoaded(posts);
+        } else {
+          yield PostError('Failed to fetch posts');
+        }
+      } catch (error) {
+        yield PostError('Failed to fetch posts: $error');
       }
     } else if (event is DeletePost) {
       _posts.removeWhere((post) => post['id'] == event.postId);
